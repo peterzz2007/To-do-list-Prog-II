@@ -1,4 +1,5 @@
 import tkinter as tk
+import sqlite3
 
 def window(width, height):
     x = (root.winfo_screenwidth() // 2) - (width // 2)
@@ -25,9 +26,41 @@ class login(tk.Frame):
         newuser = tk.Button(self, text="Izveidot jaunu profilu", font= "Trebuchet", width= 25, command= self.adduser)
         newuser.place(x=260 ,y= 75)
 
-        self.list = tk.Listbox(self, width = 40, height= 20)
+        deleteuser = tk.Button(self, text="Dzēst profilu", font= "Trebuchet", width= 25, command= self.deleteuserc)
+        deleteuser.place(x=260 ,y= 110)
+
+        self.list = tk.Listbox(self, width = 27, height= 17, font= "Trebuchet")
         self.list.place(x=10, y=10)
         self.place(x=0, y=0, width=500, height=350)
+
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        c.execute('''
+                CREATE TABLE IF NOT EXISTS PROFILE(
+                    PROFILE_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    PROFILE_NAME TEXT NOT NULL UNIQUE,
+                    PROFILE_PASSWORD TEXT, 
+                    LAST_ACTIVE DATE 
+                                    )
+        ''')
+        c.execute(''' SELECT * FROM PROFILE''')
+        for row in c.fetchall():
+            self.list.insert(tk.END, row[1])
+        conn.commit()
+        conn.close()
+    
+    def deleteuserc(self):
+        selected_index = self.list.curselection()
+        if selected_index:
+            index = selected_index[0]
+            userdelete = self.list.get(index)
+            conn = sqlite3.connect('todolist.db')
+            c = conn.cursor()
+            c.execute(''' DELETE FROM PROFILE WHERE PROFILE_NAME = ?''', (userdelete,))
+            conn.commit()
+            conn.close()
+            self.list.delete(index)
+
 
     def adduser(self):
         for widget in self.winfo_children():
@@ -63,6 +96,7 @@ class register(tk.Frame):
         create.place(x= 213, y = 160)
         self.place(x=0, y=0, width=500, height=350)
 
+    
     def backbtn(self):
         for widget in self.winfo_children():
             widget.destroy()
@@ -72,6 +106,12 @@ class register(tk.Frame):
     def createprofile(self):
         val1 = self.password.get()
         val2 = self.username.get()
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, val1))
+        conn.commit()
+        conn.close()
+       
         print(f"Username is {val2} and the password is {val1}")
 
 
