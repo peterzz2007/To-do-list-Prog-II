@@ -254,7 +254,7 @@ class MainWindow(tk.Frame):
             index = selected_index[0]
             fulltext = self.todolist.get(index)
             task_id = fulltext.split(" - ")[0].strip()
-            print(task_id)
+    
         c.execute("SELECT TASK_NAME, TASK_DESC, TASK_NOTES FROM TASK WHERE TASK_NAME = ?", (task_id,))
         for row in c.fetchall():
             self.task_name = row[0]
@@ -427,7 +427,7 @@ class MainWindow(tk.Frame):
                     self.task.insert(0, row[0])        
                     self.description.insert(0, row[1]) 
                     self.timelimit.insert(0, row[2])
-                    print (row[0], row[1], row[2])
+                    
             
                 conn.commit()
                 conn.close()
@@ -831,7 +831,7 @@ class register(tk.Frame):
 
 
 
-print(loginindex)
+
 root = tk.Tk()
 login(root)
 root.mainloop()
