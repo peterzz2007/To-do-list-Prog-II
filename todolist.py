@@ -308,7 +308,10 @@ class MainWindow(tk.Frame):
                 self.todolist.insert(tk.END, text)
         c.execute("SELECT TASK_NAME, TASK_DUE FROM TASK WHERE PROFILE_ID = ?", (loginindex + 1,))
             
-        
+        c.execute("SELECT * FROM CATEGORY")
+        data = c.fetchall()
+        self.catmapz = {row[1]: row[0] for row in data}
+        self.category['values'] = ["Visi uzdevumi"] + list(self.catmapz.keys())
         
         conn.close()
 
