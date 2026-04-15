@@ -108,13 +108,13 @@ class login(tk.Frame):
             else:
                 self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
                 self.passwordtext.place( x=260 ,y= 145)
-                self.password = tk.Entry(self, width= 25, font= "Trebuchet", show= "*")
+                self.password = tk.Entry(self, width= 25, font= "Trebuchet")
                 self.password.place(x= 260, y = 170)
                 self.loginbtn = tk.Button(self, text="Ielogoties", font= "Trebuchet", width= 8, command= self.passwordsys)
                 self.loginbtn.place(x= 405, y = 195)
+                
         except AttributeError:
-            self.selecttext = tk.Label(self, text="Izvēlies profilu!", font= ("Trebuchet" ,15, "bold"))
-            self.selecttext.place( x=260 ,y= 145)
+            messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
 
     def passwordsys(self):
         self.entered_pass = self.password.get()
@@ -126,20 +126,27 @@ class login(tk.Frame):
                 widget.destroy()
                 self.destroy()
             MainWindow(self.master)
-        
+        else:
+            messagebox.showerror("Kļūda!", "Nepareiza parole!")
 
     def deleteuserc(self):
         selected_index = self.list.curselection()
         if selected_index:
             index = selected_index[0]
             userdelete = self.list.get(index)
+            prof_name = userdelete.split(" - ")[0].strip()
             conn = sqlite3.connect('todolist.db')
             c = conn.cursor()
-            c.execute(''' DELETE FROM PROFILE WHERE PROFILE_NAME = ?''', (userdelete,))
+            c.execute(''' DELETE FROM PROFILE WHERE PROFILE_NAME = ?''', (prof_name,))
+            c.execute(''' DELETE FROM TASK WHERE PROFILE_ID = ?''', (index + 1,))
             c.execute(''' DELETE FROM SQLITE_SEQUENCE WHERE NAME = 'PROFILE' ''')
             conn.commit()
             conn.close()
             self.list.delete(index)
+            self.passwordtext.destroy()
+            self.password.destroy()
+            self.loginbtn.destroy()
+            self.selecttext.destroy()
 
     def adduser(self):
         for widget in self.winfo_children():
@@ -286,8 +293,10 @@ class MainWindow(tk.Frame):
                 date = datetime.strptime(duedate, "%d.%m.%Y").strftime("%d.%m.%Y") if duedate else "Nav limita"
                 if duedate and duedate < today:
                     text = f"{taskname} - (Nokavēts!)"
-                else:
+                elif duedate and duedate >= today: 
                     text = f"{taskname} - (pildāms līdz: {date})"
+                else:
+                    text = f"{taskname} - (Nav limita!)"
 
                 self.todolist.insert(tk.END, text)
         else:
@@ -439,57 +448,63 @@ class MainWindow(tk.Frame):
         selected_name = self.catelist.get()
         cat_id = self.catmap.get(selected_name)
         val1 = self.task.get()
-        val2 = self.description.get()
-        val3 = self.timelimit.get()
-        val4 = loginindex + 1
-        self.task.delete(0, tk.END)
-        self.description.delete(0, tk.END)
-        self.timelimit.delete(0, tk.END)
-        self.todolist.delete(0, tk.END)
-        conn = sqlite3.connect('todolist.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
-        c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
-        for row in c.fetchall():
-            self.todolist.insert(tk.END, row[1])
-        conn.commit()
-        conn.close()
-        self.newtaskWindow.destroy()
-        self.task_filter()
+        if val1 == "":
+            messagebox.showerror("Kļūda!", "Uzdevumam jāpiešķir nosaukums!")
+        else:
+            val2 = self.description.get()
+            val3 = self.timelimit.get()
+            val4 = loginindex + 1
+            self.task.delete(0, tk.END)
+            self.description.delete(0, tk.END)
+            self.timelimit.delete(0, tk.END)
+            self.todolist.delete(0, tk.END)
+            conn = sqlite3.connect('todolist.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
+            c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+            for row in c.fetchall():
+                self.todolist.insert(tk.END, row[1])
+            conn.commit()
+            conn.close()
+            self.newtaskWindow.destroy()
+            self.task_filter()
         
 
     def edittask(self):
         selected_name = self.catelistedit.get()
         cat_id = self.catmap.get(selected_name)
         val1 = self.task.get()
-        val2 = self.description.get()
-        val3 = self.timelimit.get()
-        self.task.delete(0, tk.END)
-        self.description.delete(0, tk.END)
-        self.timelimit.delete(0, tk.END)
-        selected_index = self.todolist.curselection()
-        if selected_index:
-            index = selected_index[0]
-            fulltext = self.todolist.get(index)
-            self.taskname = fulltext.split(" - ")[0].strip()
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("""
-                UPDATE TASK 
-                SET TASK_NAME = ?,
-                TASK_DESC = ?, TASK_DUE = ?, CATEGORY_ID = ?
-                WHERE TASK_NAME = ?
-            """, (val1, val2, val3, cat_id, self.taskname))
-            self.todolist.delete(0, tk.END)
-            c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
-            for row in c.fetchall():
-                self.todolist.insert(tk.END, row[1])
+        if val1 == "":
+            messagebox.showerror("Kļūda!", "Uzdevumam jābūt nosaukums!")
+        else:
+            val2 = self.description.get()
+            val3 = self.timelimit.get()
+            self.task.delete(0, tk.END)
+            self.description.delete(0, tk.END)
+            self.timelimit.delete(0, tk.END)
+            selected_index = self.todolist.curselection()
+            if selected_index:
+                index = selected_index[0]
+                fulltext = self.todolist.get(index)
+                self.taskname = fulltext.split(" - ")[0].strip()
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute("""
+                    UPDATE TASK 
+                    SET TASK_NAME = ?,
+                    TASK_DESC = ?, TASK_DUE = ?, CATEGORY_ID = ?
+                    WHERE TASK_NAME = ?
+                """, (val1, val2, val3, cat_id, self.taskname))
+                self.todolist.delete(0, tk.END)
+                c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+                for row in c.fetchall():
+                    self.todolist.insert(tk.END, row[1])
             
-            conn.commit()
-            conn.close()
-            conn = sqlite3.connect('todolist.db')
-        self.taskeditorw.destroy()
-        self.task_filter()
+                conn.commit()
+                conn.close()
+                conn = sqlite3.connect('todolist.db')
+            self.taskeditorw.destroy()
+            self.task_filter()
      
 
     def logout(self):
@@ -539,18 +554,22 @@ class MainWindow(tk.Frame):
 
     def addnote(self):
         val1 = self.notes.get()
-        selected_index = self.todolist.curselection()
-        if selected_index:
-            index = selected_index[0]
-            self.taskname = self.todolist.get(index)
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("""UPDATE TASK SET TASK_NOTES = ? WHERE TASK_NAME = ?""", (val1, self.taskname))
-        
-            conn.commit()
-            conn.close()
-            self.noteseditorw.destroy()
-            self.task_filter()
+        if val1 == "":
+            messagebox.showerror("Kļūda!", "Piezīme nevar būt tukša!")
+        else:
+            selected_index = self.todolist.curselection()
+            if selected_index:
+                index = selected_index[0]
+                fulltext = self.todolist.get(index)
+                getpass = fulltext.split(" - ")[0].strip()
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute("""UPDATE TASK SET TASK_NOTES = ? WHERE TASK_NAME = ?""", (val1, getpass))
+
+                conn.commit()
+                conn.close()
+                self.noteseditorw.destroy()
+                self.task_filter()
 
     def catmenu(self):
         self.catmenuw = tk.Tk()
@@ -564,6 +583,7 @@ class MainWindow(tk.Frame):
         notestext = tk.Label(self.catmenuw, text="Kategoriju saraksts", font= ("Trebuchet", 12))
         notestext.place(x=10, y=35)
         self.catlist = tk.Listbox(self.catmenuw, width = 25, height= 8, font= "Trebuchet")
+        self.catlist.bind("<Double-1>", self.cat_view)
         self.catlist.place(x=10, y=40)
 
         addtask = tk.Button(self.catmenuw, text="Pievienot kategoriju", font= "Trebuchet", width= 20 ,command= self.addcat)
@@ -618,20 +638,23 @@ class MainWindow(tk.Frame):
     
     def createcat(self):
         val1 = self.cat.get()
-        val2 = self.description.get()
-        self.description.delete(0, tk.END)
-        self.cat.delete(0, tk.END)
-        self.catlist.delete(0, tk.END)
-        conn = sqlite3.connect('todolist.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
-        c.execute(''' SELECT * FROM CATEGORY ''')
-        for row in c.fetchall():
-            self.catlist.insert(tk.END, row[1])
-        conn.commit()
-        conn.close()
-        self.addcatw.destroy()
-        self.task_filter()
+        if val1 == "":
+            messagebox.showerror("Kļūda!", "Kategorijai jāpiešķir nosaukums!")
+        else:
+            val2 = self.description.get()
+            self.description.delete(0, tk.END)
+            self.cat.delete(0, tk.END)
+            self.catlist.delete(0, tk.END)
+            conn = sqlite3.connect('todolist.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
+            c.execute(''' SELECT * FROM CATEGORY ''')
+            for row in c.fetchall():
+                self.catlist.insert(tk.END, row[1])
+            conn.commit()
+            conn.close()
+            self.addcatw.destroy()
+            self.task_filter()
     
     def cateditor(self):
             self.cateditorw = tk.Tk()
@@ -676,31 +699,63 @@ class MainWindow(tk.Frame):
             self.catlist.delete(index)
             self.task_filter()
     
-    def editcat(self):
-        val1 = self.cat.get()
-        val2 = self.description.get()
-        self.cat.delete(0, tk.END)
-        self.description.delete(0, tk.END)
+    def cat_view(self, event):
+        self.newtaskWindow = tk.Tk()
+        self.newtaskWindow.wm_title("Kategorija")
+        self.newtaskWindow.wm_geometry("300x200")
+        self.master.resizable(False, False)
+
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
         selected_index = self.catlist.curselection()
         if selected_index:
             index = selected_index[0]
-            self.catname = self.catlist.get(index)
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("""
-                UPDATE CATEGORY 
-                SET CATEGORY_NAME = ?,
-                CATEGORY_DESC = ?
-                WHERE CATEGORY_NAME = ?
-            """, (val1, val2, self.catname))
-            self.catlist.delete(0, tk.END)
-            c.execute(''' SELECT * FROM CATEGORY''')
-            for row in c.fetchall():
-                self.catlist.insert(tk.END, row[1])
-            conn.commit()
-            conn.close()
-            self.cateditorw.destroy()
-            self.task_filter()
+            fulltext = self.catlist.get(index)
+        c.execute("SELECT CATEGORY_NAME, CATEGORY_DESC FROM CATEGORY WHERE CATEGORY_NAME = ?", (fulltext,))
+        for row in c.fetchall():
+            self.task_name = row[0]
+            if row[1] == "":
+                self.task_desc = "Nav apraksta"
+            else:
+                self.task_desc = row[1]
+        conn.commit()
+        conn.close()  
+
+        tasklabel = tk.Label(self.newtaskWindow, text=f"{self.task_name}", font= ("Trebuchet", 15, "bold"))
+        tasklabel.place(x=10, y=5)
+        taskdesctext = tk.Label(self.newtaskWindow, text="Apraksts", font= ("Trebuchet", 10))
+        taskdesctext.place(x=10, y=40)
+        taskdesc = tk.Label(self.newtaskWindow, text=f"{self.task_desc}", font= ("Trebuchet", 12))
+        taskdesc.place(x=10, y=60)
+
+
+    def editcat(self):
+        val1 = self.cat.get()
+        if val1 == "":
+            messagebox.showerror("Kļūda!", "Kategorijai jābūt nosaukums!")
+            val2 = self.description.get()
+            self.cat.delete(0, tk.END)
+            self.description.delete(0, tk.END)
+            selected_index = self.catlist.curselection()
+            if selected_index:
+                index = selected_index[0]
+                self.catname = self.catlist.get(index)
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute("""
+                    UPDATE CATEGORY 
+                    SET CATEGORY_NAME = ?,
+                    CATEGORY_DESC = ?
+                    WHERE CATEGORY_NAME = ?
+                """, (val1, val2, self.catname))
+                self.catlist.delete(0, tk.END)
+                c.execute(''' SELECT * FROM CATEGORY''')
+                for row in c.fetchall():
+                    self.catlist.insert(tk.END, row[1])
+                conn.commit()
+                conn.close()
+                self.cateditorw.destroy()
+                self.task_filter()
 
         
 
@@ -722,7 +777,7 @@ class register(tk.Frame):
         self.username = tk.Entry(self, width= 30, font= "Trebuchet")
         self.username.place(x= 20, y = 80)
 
-        passwordtext = tk.Label(self, text="Profila parole", font= "Trebuchet", show= "*")
+        passwordtext = tk.Label(self, text="Profila parole", font= "Trebuchet")
         passwordtext.place( x=20 ,y= 105)
         self.password = tk.Entry(self, width= 30, font= "Trebuchet")
         self.password.place(x= 20, y = 130)
@@ -750,18 +805,21 @@ class register(tk.Frame):
         else:
            hashval1 = hashlib.sha256(val1.encode()).hexdigest()
            val2 = self.username.get()
-           self.password.delete(0, tk.END)
-           self.username.delete(0, tk.END)
-           conn = sqlite3.connect('todolist.db')
-           c = conn.cursor()
-           c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
+           if val2 == "":
+               messagebox.showerror("Kļūda!", "Profila nosaukums nedrīkst būt tukšs!")
+           else:
+            self.password.delete(0, tk.END)
+            self.username.delete(0, tk.END)
+            conn = sqlite3.connect('todolist.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
         
-           conn.commit()
-           conn.close()
-           for widget in self.winfo_children():
-              widget.destroy()
-           self.destroy()
-           login(self.master)
+            conn.commit()
+            conn.close()
+            for widget in self.winfo_children():
+                  widget.destroy()
+            self.destroy()
+            login(self.master)
     
 
 
