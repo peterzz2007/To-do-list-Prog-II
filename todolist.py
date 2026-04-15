@@ -204,8 +204,8 @@ class MainWindow(tk.Frame):
         edittask = tk.Button(self, text="Rediģēt uzdevumu", font= "Trebuchet", width= 20 ,command= self.taskeditor)
         edittask.place(x=300 ,y= 50)
 
-        deletetask = tk.Button(self, text="Dzēst uzdevumu", font= "Trebuchet", width= 20, command= self.deletetaskc)
-        deletetask.place(x=300 ,y= 90)
+        completetask = tk.Button(self, text="Dzēst uzdevumu", font= "Trebuchet", width= 20, command= self.deletetaskc)
+        completetask.place(x=300 ,y= 90)
 
         addnotes = tk.Button(self, text="Pievienot piezīmi", font= "Trebuchet", width= 20, command= self.noteseditor)
         addnotes.place(x=300 ,y= 130)
