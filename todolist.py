@@ -52,7 +52,10 @@ class login(tk.Frame):
         ''')
         c.execute(''' SELECT PROFILE_NAME, LAST_ACTIVE FROM PROFILE''')
         for row in c.fetchall():
-            display_text = f"{row[0]} - ielogojies: {row[1]}"
+            if row[1] == None:
+                display_text = f"{row[0]} - Jauns profils"
+            else:
+                display_text = f"{row[0]} - ielogojies: {row[1]}"
             self.list.insert(tk.END, display_text)
         conn.commit()
         conn.close()
