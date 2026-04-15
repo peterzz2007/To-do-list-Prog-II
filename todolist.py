@@ -702,7 +702,7 @@ class MainWindow(tk.Frame):
     def cat_view(self, event):
         self.newtaskWindow = tk.Tk()
         self.newtaskWindow.wm_title("Kategorija")
-        self.newtaskWindow.wm_geometry("300x200")
+        self.newtaskWindow.wm_geometry("300x100")
         self.master.resizable(False, False)
 
         conn = sqlite3.connect('todolist.db')
@@ -727,6 +727,7 @@ class MainWindow(tk.Frame):
         taskdesctext.place(x=10, y=40)
         taskdesc = tk.Label(self.newtaskWindow, text=f"{self.task_desc}", font= ("Trebuchet", 12))
         taskdesc.place(x=10, y=60)
+        self.task.place(x=0, y=0 ,width= 300, height= 100)
 
 
     def editcat(self):
