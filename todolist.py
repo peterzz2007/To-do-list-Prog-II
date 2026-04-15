@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 import sqlite3
 from datetime import datetime
 import hashlib
@@ -107,7 +108,7 @@ class login(tk.Frame):
             else:
                 self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
                 self.passwordtext.place( x=260 ,y= 145)
-                self.password = tk.Entry(self, width= 25, font= "Trebuchet")
+                self.password = tk.Entry(self, width= 25, font= "Trebuchet", show= "*")
                 self.password.place(x= 260, y = 170)
                 self.loginbtn = tk.Button(self, text="Ielogoties", font= "Trebuchet", width= 8, command= self.passwordsys)
                 self.loginbtn.place(x= 405, y = 195)
@@ -721,7 +722,7 @@ class register(tk.Frame):
         self.username = tk.Entry(self, width= 30, font= "Trebuchet")
         self.username.place(x= 20, y = 80)
 
-        passwordtext = tk.Label(self, text="Profila parole", font= "Trebuchet")
+        passwordtext = tk.Label(self, text="Profila parole", font= "Trebuchet", show= "*")
         passwordtext.place( x=20 ,y= 105)
         self.password = tk.Entry(self, width= 30, font= "Trebuchet")
         self.password.place(x= 20, y = 130)
@@ -742,20 +743,25 @@ class register(tk.Frame):
 
     def createprofile(self):
         val1 = self.password.get()
-        hashval1 = hashlib.sha256(val1.encode()).hexdigest()
-        val2 = self.username.get()
-        self.password.delete(0, tk.END)
-        self.username.delete(0, tk.END)
-        conn = sqlite3.connect('todolist.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
+        minlength = 8
+
+        if len(val1) < minlength:
+           messagebox.showerror("Kļūda!", "Parolei jābūt vismaz 8 simboli!")
+        else:
+           hashval1 = hashlib.sha256(val1.encode()).hexdigest()
+           val2 = self.username.get()
+           self.password.delete(0, tk.END)
+           self.username.delete(0, tk.END)
+           conn = sqlite3.connect('todolist.db')
+           c = conn.cursor()
+           c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
         
-        conn.commit()
-        conn.close()
-        for widget in self.winfo_children():
-            widget.destroy()
-        self.destroy()
-        login(self.master)
+           conn.commit()
+           conn.close()
+           for widget in self.winfo_children():
+              widget.destroy()
+           self.destroy()
+           login(self.master)
     
 
 
