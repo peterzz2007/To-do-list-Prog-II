@@ -803,27 +803,29 @@ class register(tk.Frame):
     def createprofile(self):
         val1 = self.password.get()
         minlength = 8
+        try:
+            if len(val1) < minlength:
+               messagebox.showerror("Kļūda!", "Parolei jābūt vismaz 8 simboli!")
+            else:
+               hashval1 = hashlib.sha256(val1.encode()).hexdigest()
+               val2 = self.username.get()
+               if val2 == "":
+                   messagebox.showerror("Kļūda!", "Profila nosaukums nedrīkst būt tukšs!")
+               else:
+                self.password.delete(0, tk.END)
+                self.username.delete(0, tk.END)
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
 
-        if len(val1) < minlength:
-           messagebox.showerror("Kļūda!", "Parolei jābūt vismaz 8 simboli!")
-        else:
-           hashval1 = hashlib.sha256(val1.encode()).hexdigest()
-           val2 = self.username.get()
-           if val2 == "":
-               messagebox.showerror("Kļūda!", "Profila nosaukums nedrīkst būt tukšs!")
-           else:
-            self.password.delete(0, tk.END)
-            self.username.delete(0, tk.END)
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO PROFILE ( PROFILE_NAME, PROFILE_PASSWORD) VALUES ( ?, ?)", ( val2, hashval1))
-        
-            conn.commit()
-            conn.close()
-            for widget in self.winfo_children():
-                  widget.destroy()
-            self.destroy()
-            login(self.master)
+                conn.commit()
+                conn.close()
+                for widget in self.winfo_children():
+                      widget.destroy()
+                self.destroy()
+                login(self.master)
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Kļūda!", "Šis lietotāja vārds ir aizņemts!")
     
 
 
