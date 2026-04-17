@@ -4,6 +4,7 @@ from tkinter import messagebox
 import sqlite3
 from datetime import datetime
 import hashlib
+import requests
 
 def window(width, height):
     x = (root.winfo_screenwidth() // 2) - (width // 2)
@@ -50,6 +51,27 @@ class login(tk.Frame):
                     LAST_ACTIVE DATE 
                                     )
         ''')
+        c.execute('''
+                CREATE TABLE IF NOT EXISTS TASK(
+                    TASK_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    TASK_NAME TEXT NOT NULL UNIQUE,
+                    TASK_DESC TEXT, 
+                    TASK_NOTES TEXT,
+                    TASK_DUE DATE,
+                    TASK_COMPLETION TEXT,
+                    PROFILE_ID INTEGER,
+                    CATEGORY_ID INTEGER, 
+                    FOREIGN KEY (PROFILE_ID) REFERENCES PROFILE(PROFILE_ID),
+                    FOREIGN KEY (CATEGORY_ID) REFERENCES CATEGORY(CATEGORY_ID)
+                                    )
+        ''')
+        c.execute('''
+                CREATE TABLE IF NOT EXISTS CATEGORY(
+                    CATEGORY_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CATEGORY_NAME TEXT NOT NULL UNIQUE,
+                    CATEGORY_DESC TEXT
+                                    )
+        ''')
         c.execute(''' SELECT PROFILE_NAME, LAST_ACTIVE FROM PROFILE''')
         for row in c.fetchall():
             if row[1] == None:
@@ -85,39 +107,43 @@ class login(tk.Frame):
 
 
     def enteruser(self):
-        global loginindex
-        selected_index = self.list.curselection()
+        listcheck = self.list.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu profilu!")
+        else:
+            global loginindex
+            selected_index = self.list.curselection()
 
-        if selected_index:
-            index = selected_index[0]
-            fulltext = self.list.get(index)
-            getpass = fulltext.split(" - ")[0].strip()
-            loginindex = index
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute(''' SELECT  * FROM PROFILE WHERE PROFILE_NAME = ?''', (getpass,))
-            for row in c.fetchall():
-                self.psswrd = row[2]
-            conn.commit()
-            conn.close()
-            
-        try:
-            if self.psswrd == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855':
-                for widget in self.winfo_children():
-                    widget.destroy()
-                    self.destroy()
-                MainWindow(self.master)
+            if selected_index:
+                index = selected_index[0]
+                fulltext = self.list.get(index)
+                getpass = fulltext.split(" - ")[0].strip()
+                loginindex = index
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute(''' SELECT  * FROM PROFILE WHERE PROFILE_NAME = ?''', (getpass,))
+                for row in c.fetchall():
+                    self.psswrd = row[2]
+                conn.commit()
+                conn.close()
                 
-            else:
-                self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
-                self.passwordtext.place( x=260 ,y= 145)
-                self.password = tk.Entry(self, width= 25, font= "Trebuchet")
-                self.password.place(x= 260, y = 170)
-                self.loginbtn = tk.Button(self, text="Ielogoties", font= "Trebuchet", width= 8, command= self.passwordsys)
-                self.loginbtn.place(x= 405, y = 195)
-                
-        except AttributeError:
-            messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
+            try:
+                if self.psswrd == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855':
+                    for widget in self.winfo_children():
+                        widget.destroy()
+                        self.destroy()
+                    MainWindow(self.master)
+                    
+                else:
+                    self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
+                    self.passwordtext.place( x=260 ,y= 145)
+                    self.password = tk.Entry(self, width= 25, font= "Trebuchet", show="*")
+                    self.password.place(x= 260, y = 170)
+                    self.loginbtn = tk.Button(self, text="Ielogoties", font= "Trebuchet", width= 8, command= self.passwordsys)
+                    self.loginbtn.place(x= 405, y = 195)
+                    
+            except AttributeError:
+                messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
 
     def passwordsys(self):
         self.entered_pass = self.password.get()
@@ -131,13 +157,57 @@ class login(tk.Frame):
             MainWindow(self.master)
         else:
             messagebox.showerror("Kļūda!", "Nepareiza parole!")
-
+    
     def deleteuserc(self):
+        listcheck = self.list.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu profilu!")
+        else:
+            global loginindex
+            selected_index = self.list.curselection()
+
+            if selected_index:
+                index = selected_index[0]
+                fulltext = self.list.get(index)
+                getpass = fulltext.split(" - ")[0].strip()
+                loginindex = index
+                conn = sqlite3.connect('todolist.db')
+                c = conn.cursor()
+                c.execute(''' SELECT  * FROM PROFILE WHERE PROFILE_NAME = ?''', (getpass,))
+                for row in c.fetchall():
+                    self.psswrd = row[2]
+                conn.commit()
+                conn.close()
+                
+            try:
+                if self.psswrd == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855':
+                    for widget in self.winfo_children():
+                        widget.destroy()
+                        self.destroy()
+                    MainWindow(self.master)
+                    
+                else:
+                    self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
+                    self.passwordtext.place( x=260 ,y= 145)
+                    self.password = tk.Entry(self, width= 25, font= "Trebuchet", show="*")
+                    self.password.place(x= 260, y = 170)
+                    self.loginbtn = tk.Button(self, text="Dzēst", font= "Trebuchet", width= 8, command= self.deletesys)
+                    self.loginbtn.place(x= 405, y = 195)
+                    
+            except AttributeError:
+                messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
+        
+    def deletesys(self):
+        self.entered_pass = self.password.get()
+        ent_password = self.entered_pass
+        ent_hashed = hashlib.sha256(ent_password.encode()).hexdigest()
         selected_index = self.list.curselection()
         if selected_index:
             index = selected_index[0]
             userdelete = self.list.get(index)
             prof_name = userdelete.split(" - ")[0].strip()
+
+        if self.psswrd == ent_hashed:
             conn = sqlite3.connect('todolist.db')
             c = conn.cursor()
             c.execute(''' DELETE FROM PROFILE WHERE PROFILE_NAME = ?''', (prof_name,))
@@ -149,7 +219,8 @@ class login(tk.Frame):
             self.passwordtext.destroy()
             self.password.destroy()
             self.loginbtn.destroy()
-            self.selecttext.destroy()
+        else:
+            messagebox.showerror("Kļūda!", "Nepareiza parole!")
 
     def adduser(self):
         for widget in self.winfo_children():
@@ -167,19 +238,7 @@ class MainWindow(tk.Frame):
         self.master.resizable(False, False)
         conn = sqlite3.connect('todolist.db')
         c = conn.cursor()
-        c.execute('''
-                CREATE TABLE IF NOT EXISTS TASK(
-                    TASK_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    TASK_NAME TEXT NOT NULL UNIQUE,
-                    TASK_DESC TEXT, 
-                    TASK_NOTES TEXT,
-                    TASK_DUE DATE,
-                    PROFILE_ID INTEGER,
-                    CATEGORY_ID INTEGER, 
-                    FOREIGN KEY (PROFILE_ID) REFERENCES PROFILE(PROFILE_ID),
-                    FOREIGN KEY (CATEGORY_ID) REFERENCES CATEGORY(CATEGORY_ID)
-                                    )
-        ''')
+
         c.execute('''
                 CREATE TABLE IF NOT EXISTS CATEGORY(
                     CATEGORY_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,10 +259,10 @@ class MainWindow(tk.Frame):
         
 
         label = tk.Label(self, text=f"Ielogojies profilā:", font= ("Trebuchet", 15, "bold"))
-        label.place(x=300 ,y= 270)
+        label.place(x=300 ,y= 290)
 
         username = tk.Label(self, text=f"{self.x}", font= ("Trebuchet", 15, "bold"))
-        username.place(x=300 ,y= 300)
+        username.place(x=300 ,y= 320)
 
         self.todolist = tk.Listbox(self, width = 31, height= 15, font= "Trebuchet", exportselection=False)
         self.todolist.bind("<Double-1>", self.task_view)
@@ -215,17 +274,20 @@ class MainWindow(tk.Frame):
         edittask = tk.Button(self, text="Rediģēt uzdevumu", font= "Trebuchet", width= 20 ,command= self.taskeditor)
         edittask.place(x=300 ,y= 50)
 
-        completetask = tk.Button(self, text="Izpildīt uzdevumu", font= "Trebuchet", width= 20, command= self.deletetaskc)
+        completetask = tk.Button(self, text="Izpildīt uzdevumu", font= "Trebuchet", width= 20, command= self.completetaskc)
         completetask.place(x=300 ,y= 90)
 
+        deletetask = tk.Button(self, text="Dzēst uzdevumu", font= "Trebuchet", width= 20, command= self.deletetaskc)
+        deletetask.place(x=300 ,y= 130)
+
         addnotes = tk.Button(self, text="Pievienot piezīmi", font= "Trebuchet", width= 20, command= self.noteseditor)
-        addnotes.place(x=300 ,y= 130)
+        addnotes.place(x=300 ,y= 170)
 
         catedit = tk.Button(self, text="Kategorijas", font= "Trebuchet", width= 20,command= self.catmenu)
-        catedit.place(x=300 ,y= 170)
+        catedit.place(x=300 ,y= 210)
 
         logout = tk.Button(self, text="Iziet no profila", font= "Trebuchet", width= 20,command= self.logout)
-        logout.place(x=300 ,y= 210)
+        logout.place(x=300 ,y= 250)
 
         self.category = ttk.Combobox(self, width= 29, font= "Trebuchet")
         self.category.bind("<<ComboboxSelected>>", self.task_filter)
@@ -242,6 +304,10 @@ class MainWindow(tk.Frame):
         #self.laiks()
 
     def task_view(self, event):
+        listcheck = self.todolist.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+            return
         self.newtaskWindow = tk.Tk()
         self.newtaskWindow.wm_title("Uzdevums")
         self.newtaskWindow.wm_geometry("300x200")
@@ -286,39 +352,51 @@ class MainWindow(tk.Frame):
         c = conn.cursor()
         if selected_name == "Visi uzdevumi":
 
-            c.execute("SELECT TASK_NAME, TASK_DUE FROM TASK WHERE PROFILE_ID = ?", (loginindex + 1,))
+            c.execute("SELECT TASK_NAME, TASK_DUE, TASK_COMPLETION FROM TASK WHERE PROFILE_ID = ?", (loginindex + 1,))
             data = c.fetchall()
             self.todolist.delete(0,tk.END)
             for row in data:
                 taskname = row[0]
                 duedate = row[1]
+                complete = row[2]
 
-                date = datetime.strptime(duedate, "%d.%m.%Y").strftime("%d.%m.%Y") if duedate else "Nav limita"
-                if duedate and duedate < today:
-                    text = f"{taskname} - (Nokavēts!)"
-                elif duedate and duedate >= today: 
-                    text = f"{taskname} - (pildāms līdz: {date})"
+                if complete == "True":
+                    text = f"{taskname} - (Izpildīts!)"
+                    
                 else:
-                    text = f"{taskname} - (Nav limita!)"
+                    date = datetime.strptime(duedate, "%d.%m.%Y").strftime("%d.%m.%Y") if duedate else "Nav limita"
+                    if duedate and duedate < today:
+                        text = f"{taskname} - (Nokavēts!)"
+                    else:
+                        text = f"{taskname} - (pildāms līdz: {date})"
+                        
 
                 self.todolist.insert(tk.END, text)
+
+
         else:
             cat_id = self.catmapz.get(selected_name)
-            c.execute("SELECT TASK_NAME, TASK_DUE FROM TASK WHERE PROFILE_ID = ? AND CATEGORY_ID = ?", 
+            c.execute("SELECT TASK_NAME, TASK_DUE, TASK_COMPLETION FROM TASK WHERE PROFILE_ID = ? AND CATEGORY_ID = ?", 
                   (loginindex + 1, cat_id))
             data = c.fetchall()
             self.todolist.delete(0,tk.END)
             for row in data:
                 taskname = row[0]
                 duedate = row[1]
+                complete = row[2]
 
-                date = datetime.strptime(duedate, "%d.%m.%Y").strftime("%d.%m.%Y") if duedate else "Nav limita"
-                if duedate and duedate < today:
-                    text = f"{taskname} - (Nokavēts!)"
+                if complete == "True":
+                    text = f"{taskname} - (Izpildīts!)"
+                    
                 else:
-                    text = f"{taskname} - (pildāms līdz: {date})"
-
+                    date = datetime.strptime(duedate, "%d.%m.%Y").strftime("%d.%m.%Y") if duedate else "Nav limita"
+                    if duedate and duedate < today:
+                        text = f"{taskname} - (Nokavēts!)"
+                    else:
+                        text = f"{taskname} - (pildāms līdz: {date})"
                 self.todolist.insert(tk.END, text)
+
+                
         c.execute("SELECT TASK_NAME, TASK_DUE FROM TASK WHERE PROFILE_ID = ?", (loginindex + 1,))
             
         c.execute("SELECT * FROM CATEGORY")
@@ -375,9 +453,11 @@ class MainWindow(tk.Frame):
             self.newtaskWindow.mainloop()
             self.task_filter()
 
-            
-
     def taskeditor(self):
+            listcheck = self.todolist.size()
+            if listcheck == 0:
+                messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+                return
             self.taskeditorw = tk.Tk()
             self.taskeditorw.wm_title("Rediģēt uzdevumu")
             self.taskeditorw.wm_geometry("250x280")
@@ -447,31 +527,59 @@ class MainWindow(tk.Frame):
             self.taskeditorw.mainloop()
             self.task_filter()
 
+
+    def completetaskc(self):
+        listcheck = self.todolist.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+            return
+        selected_index = self.todolist.curselection()
+        if selected_index:
+            index = selected_index[0]
+            fulltext = self.todolist.get(index)
+            self.taskname = fulltext.split(" - ")[0].strip()
+            val1 = "True"
+            conn = sqlite3.connect('todolist.db')
+            c = conn.cursor()
+            c.execute(''' UPDATE TASK SET TASK_COMPLETION = ? WHERE TASK_NAME = ?''', (val1, self.taskname,))
+            conn.commit()
+            conn.close()
+            self.todolist.delete(index)
+            self.task_filter()
+        messagebox.Message("Uzdevums veiksmīgi izpildīts!")
+
     def createtask(self):
         selected_name = self.catelist.get()
         cat_id = self.catmap.get(selected_name)
         val1 = self.task.get()
         if val1 == "":
             messagebox.showerror("Kļūda!", "Uzdevumam jāpiešķir nosaukums!")
+        date = self.timelimit.get()
+        if date == "":
+            val3 = ""
         else:
-            val2 = self.description.get()
-            val3 = self.timelimit.get()
-            val4 = loginindex + 1
-            self.task.delete(0, tk.END)
-            self.description.delete(0, tk.END)
-            self.timelimit.delete(0, tk.END)
-            self.todolist.delete(0, tk.END)
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
-            c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
-            for row in c.fetchall():
-                self.todolist.insert(tk.END, row[1])
-            conn.commit()
-            conn.close()
-            self.newtaskWindow.destroy()
-            self.task_filter()
-        
+            try:
+                valid_date = datetime.strptime(date, "%d.%m.%Y")
+                val3 = valid_date.strftime("%d.%m.%Y")
+            except ValueError:
+                messagebox.showerror("Kļūda!", "Datums ievadīts nepareizi")
+                return
+        val2 = self.description.get()
+        val4 = loginindex + 1
+        self.task.delete(0, tk.END)
+        self.description.delete(0, tk.END)
+        self.timelimit.delete(0, tk.END)
+        self.todolist.delete(0, tk.END)
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
+        c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+        for row in c.fetchall():
+            self.todolist.insert(tk.END, row[1])
+        conn.commit()
+        conn.close()
+        self.newtaskWindow.destroy()
+        self.task_filter()
 
     def edittask(self):
         selected_name = self.catelistedit.get()
@@ -517,6 +625,10 @@ class MainWindow(tk.Frame):
         login(self.master)
     
     def deletetaskc(self):
+        listcheck = self.todolist.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+            return
         selected_index = self.todolist.curselection()
         if selected_index:
             index = selected_index[0]
@@ -532,6 +644,10 @@ class MainWindow(tk.Frame):
             self.task_filter()
     
     def noteseditor(self):
+            listcheck = self.todolist.size()
+            if listcheck == 0:
+                messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+                return
             self.noteseditorw = tk.Tk()
             self.noteseditorw.wm_title("Pievienot piezīmi")
             self.noteseditorw.wm_geometry("400x120")
@@ -643,29 +759,33 @@ class MainWindow(tk.Frame):
         val1 = self.cat.get()
         if val1 == "":
             messagebox.showerror("Kļūda!", "Kategorijai jāpiešķir nosaukums!")
-        else:
-            val2 = self.description.get()
-            self.description.delete(0, tk.END)
-            self.cat.delete(0, tk.END)
-            self.catlist.delete(0, tk.END)
-            conn = sqlite3.connect('todolist.db')
-            c = conn.cursor()
-            c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
-            c.execute(''' SELECT * FROM CATEGORY ''')
-            for row in c.fetchall():
-                self.catlist.insert(tk.END, row[1])
-            conn.commit()
-            conn.close()
-            self.addcatw.destroy()
-            self.task_filter()
+        
+        val2 = self.description.get()
+        self.description.delete(0, tk.END)
+        self.cat.delete(0, tk.END)
+        self.catlist.delete(0, tk.END)
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
+        c.execute(''' SELECT * FROM CATEGORY ''')
+        for row in c.fetchall():
+            self.catlist.insert(tk.END, row[1])
+        conn.commit()
+        conn.close()
+        self.addcatw.destroy()
+        self.task_filter()
     
     def cateditor(self):
+            listcheck = self.catlist.size()
+            if listcheck == 0:
+                messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
+                return
             self.cateditorw = tk.Tk()
-            self.cateditorw.wm_title("Jauna kategorija")
+            self.cateditorw.wm_title("Rediģēt kategorija")
             self.cateditorw.wm_geometry("250x190")
             self.master.resizable(False, False)
 
-            labeltest = tk.Label(self.cateditorw, text="Pievienot kategoriju", font= ("Trebuchet", 15, "bold"))
+            labeltest = tk.Label(self.cateditorw, text="Rediģēt kategoriju", font= ("Trebuchet", 15, "bold"))
             labeltest.place(x=10, y=5)
 
             cattext = tk.Label(self.cateditorw, text="Nosaukums", font= ("Trebuchet", 12))
@@ -689,6 +809,10 @@ class MainWindow(tk.Frame):
             self.task_filter()
 
     def deletecat(self):
+        listcheck = self.catlist.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
+            return
         selected_index = self.catlist.curselection()
         if selected_index:
             index = selected_index[0]
@@ -703,6 +827,10 @@ class MainWindow(tk.Frame):
             self.task_filter()
     
     def cat_view(self, event):
+        listcheck = self.catlist.size()
+        if listcheck == 0:
+            messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
+            return
         self.newtaskWindow = tk.Tk()
         self.newtaskWindow.wm_title("Kategorija")
         self.newtaskWindow.wm_geometry("300x100")
@@ -783,7 +911,7 @@ class register(tk.Frame):
 
         passwordtext = tk.Label(self, text="Profila parole", font= "Trebuchet")
         passwordtext.place( x=20 ,y= 105)
-        self.password = tk.Entry(self, width= 30, font= "Trebuchet")
+        self.password = tk.Entry(self, width= 30, font= "Trebuchet" , show="*")
         self.password.place(x= 20, y = 130)
 
         backbtn = tk.Button(self, text="atpakaļ", font= "Trebuchet", width= 8, command=self.backbtn)
