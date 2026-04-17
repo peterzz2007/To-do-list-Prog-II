@@ -308,6 +308,15 @@ class MainWindow(tk.Frame):
         if listcheck == 0:
             messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
             return
+        try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+        except UnboundLocalError:
+            messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
+            return
         self.newtaskWindow = tk.Tk()
         self.newtaskWindow.wm_title("Uzdevums")
         self.newtaskWindow.wm_geometry("300x200")
@@ -458,6 +467,18 @@ class MainWindow(tk.Frame):
             if listcheck == 0:
                 messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
                 return
+            try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+            except UnboundLocalError:
+                messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
+                return
+            #if self.todolist.curselection == None:
+            #    messagebox.showerror("Kļūda!","Nav izvēlēts uzdevums!")
+            #    return
             self.taskeditorw = tk.Tk()
             self.taskeditorw.wm_title("Rediģēt uzdevumu")
             self.taskeditorw.wm_geometry("250x280")
@@ -533,6 +554,15 @@ class MainWindow(tk.Frame):
         if listcheck == 0:
             messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
             return
+        try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+        except UnboundLocalError:
+            messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
+            return
         selected_index = self.todolist.curselection()
         if selected_index:
             index = selected_index[0]
@@ -546,7 +576,6 @@ class MainWindow(tk.Frame):
             conn.close()
             self.todolist.delete(index)
             self.task_filter()
-        messagebox.Message("Uzdevums veiksmīgi izpildīts!")
 
     def createtask(self):
         selected_name = self.catelist.get()
@@ -629,6 +658,15 @@ class MainWindow(tk.Frame):
         if listcheck == 0:
             messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
             return
+        try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+        except UnboundLocalError:
+            messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
+            return
         selected_index = self.todolist.curselection()
         if selected_index:
             index = selected_index[0]
@@ -647,6 +685,15 @@ class MainWindow(tk.Frame):
             listcheck = self.todolist.size()
             if listcheck == 0:
                 messagebox.showerror("Kļūda!","Nav izveidotu uzdevumu!")
+                return
+            try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+            except UnboundLocalError:
+                messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
                 return
             self.noteseditorw = tk.Tk()
             self.noteseditorw.wm_title("Pievienot piezīmi")
@@ -780,6 +827,15 @@ class MainWindow(tk.Frame):
             if listcheck == 0:
                 messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
                 return
+            try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+            except UnboundLocalError:
+                messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
+                return
             self.cateditorw = tk.Tk()
             self.cateditorw.wm_title("Rediģēt kategorija")
             self.cateditorw.wm_geometry("250x190")
@@ -813,6 +869,15 @@ class MainWindow(tk.Frame):
         if listcheck == 0:
             messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
             return
+        try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+        except UnboundLocalError:
+            messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
+            return
         selected_index = self.catlist.curselection()
         if selected_index:
             index = selected_index[0]
@@ -830,6 +895,15 @@ class MainWindow(tk.Frame):
         listcheck = self.catlist.size()
         if listcheck == 0:
             messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
+            return
+        try:
+                selected_index = self.todolist.curselection()
+                if selected_index:
+                    index = selected_index[0]
+                    fulltext = self.todolist.get(index)
+                print(fulltext)
+        except UnboundLocalError:
+            messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
             return
         self.newtaskWindow = tk.Tk()
         self.newtaskWindow.wm_title("Kategorija")
