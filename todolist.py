@@ -313,7 +313,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
         except UnboundLocalError:
             messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
             return
@@ -333,7 +333,10 @@ class MainWindow(tk.Frame):
         c.execute("SELECT TASK_NAME, TASK_DESC, TASK_NOTES FROM TASK WHERE TASK_NAME = ?", (task_id,))
         for row in c.fetchall():
             self.task_name = row[0]
-            self.task_desc = row[1]
+            if row[1] == "":
+                self.task_desc = "Nav apraksta"
+            else:
+                self.task_desc = row[1]
             if row[2] == None:
                 self.task_notes = "Nav piezīmju"
             else:
@@ -458,7 +461,7 @@ class MainWindow(tk.Frame):
 
             donebtn = tk.Button(self.newtaskWindow, text= "Izveidot", font=("Trebuchet",10),width=5, command= self.createtask)
             donebtn.place(x= 190, y=240)
-            self.newtaskWindow.place(x=10, y=10, width=300, height=250)
+            #self.newtaskWindow.place(x=10, y=10, width=300, height=250)
             self.newtaskWindow.mainloop()
             self.task_filter()
 
@@ -472,7 +475,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
             except UnboundLocalError:
                 messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
                 return
@@ -542,7 +545,7 @@ class MainWindow(tk.Frame):
             conn.commit()
             conn.close()
 
-            self.taskeditorw.place(x=10, y=10, width=300, height=250)
+            #self.taskeditorw.place(x=10, y=10, width=300, height=250)
             
 
             self.taskeditorw.mainloop()
@@ -559,7 +562,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
         except UnboundLocalError:
             messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
             return
@@ -601,7 +604,15 @@ class MainWindow(tk.Frame):
         self.todolist.delete(0, tk.END)
         conn = sqlite3.connect('todolist.db')
         c = conn.cursor()
-        c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
+        try:
+            c.execute("INSERT INTO TASK ( TASK_NAME, TASK_DESC, TASK_DUE, PROFILE_ID, CATEGORY_ID) VALUES ( ?, ?, ?, ?, ?)", ( val1, val2, val3, val4, cat_id))
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Kļūda!", "Uzdevumam japiešķir unikāls nosaukums!")
+            c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+            for row in c.fetchall():
+                self.todolist.insert(tk.END, row[1])
+            conn.close()
+            return
         c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
         for row in c.fetchall():
             self.todolist.insert(tk.END, row[1])
@@ -616,35 +627,43 @@ class MainWindow(tk.Frame):
         val1 = self.task.get()
         if val1 == "":
             messagebox.showerror("Kļūda!", "Uzdevumam jābūt nosaukums!")
-        else:
-            val2 = self.description.get()
-            val3 = self.timelimit.get()
-            self.task.delete(0, tk.END)
-            self.description.delete(0, tk.END)
-            self.timelimit.delete(0, tk.END)
-            selected_index = self.todolist.curselection()
-            if selected_index:
-                index = selected_index[0]
-                fulltext = self.todolist.get(index)
-                self.taskname = fulltext.split(" - ")[0].strip()
-                conn = sqlite3.connect('todolist.db')
-                c = conn.cursor()
-                c.execute("""
-                    UPDATE TASK 
-                    SET TASK_NAME = ?,
-                    TASK_DESC = ?, TASK_DUE = ?, CATEGORY_ID = ?
-                    WHERE TASK_NAME = ?
-                """, (val1, val2, val3, cat_id, self.taskname))
-                self.todolist.delete(0, tk.END)
-                c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
-                for row in c.fetchall():
-                    self.todolist.insert(tk.END, row[1])
-            
-                conn.commit()
-                conn.close()
-                conn = sqlite3.connect('todolist.db')
-            self.taskeditorw.destroy()
-            self.task_filter()
+        
+        val2 = self.description.get()
+        val3 = self.timelimit.get()
+        self.task.delete(0, tk.END)
+        self.description.delete(0, tk.END)
+        self.timelimit.delete(0, tk.END)
+        selected_index = self.todolist.curselection()
+        if selected_index:
+            index = selected_index[0]
+            fulltext = self.todolist.get(index)
+            self.taskname = fulltext.split(" - ")[0].strip()
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        try:
+            c.execute("""
+                UPDATE TASK 
+                SET TASK_NAME = ?,
+                TASK_DESC = ?, TASK_DUE = ?, CATEGORY_ID = ?
+                WHERE TASK_NAME = ?
+            """, (val1, val2, val3, cat_id, self.taskname))
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Kļūda!", "Uzdevuma nosaukumam jābūt unikālam!")
+            c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+            self.todolist.delete(0, tk.END)
+            for row in c.fetchall():
+                self.todolist.insert(tk.END, row[1])
+            conn.close()
+            return
+        c.execute(''' SELECT * FROM TASK WHERE PROFILE_ID = ?''', (loginindex + 1,))
+        self.todolist.delete(0, tk.END)
+        for row in c.fetchall():
+            self.todolist.insert(tk.END, row[1])
+        conn.commit()
+        conn.close()
+        conn = sqlite3.connect('todolist.db')
+        self.taskeditorw.destroy()
+        self.task_filter()
      
 
     def logout(self):
@@ -663,7 +682,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
         except UnboundLocalError:
             messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
             return
@@ -691,7 +710,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
             except UnboundLocalError:
                 messagebox.showerror("Kļūda!", "Nav izvēlēts uzdevums!")
                 return
@@ -714,7 +733,7 @@ class MainWindow(tk.Frame):
             donebtn = tk.Button(self.noteseditorw, text= "Izveidot", font=("Trebuchet",10),width=5, command= self.addnote)
             donebtn.place(x= 340, y=90)
 
-            self.noteseditorw.place(x=10, y=10, width=400, height=120)
+            #self.noteseditorw.place(x=10, y=10, width=400, height=120)
             self.noteseditorw.mainloop()
             self.task_filter()
 
@@ -769,7 +788,7 @@ class MainWindow(tk.Frame):
         c.execute(''' SELECT * FROM CATEGORY ''')
         for row in c.fetchall():
             self.catlist.insert(tk.END, row[1])
-        self.catmenuw.place(x=10, y=10, width=450, height=200)
+        #self.catmenuw.place(x=10, y=10, width=450, height=200)
         self.catmenuw.mainloop()
         self.task_filter()
         
@@ -797,7 +816,7 @@ class MainWindow(tk.Frame):
 
             donebtn = tk.Button(self.addcatw, text= "Izveidot", font=("Trebuchet",10),width=5, command= self.createcat)
             donebtn.place(x= 190, y=150)
-            self.addcatw.place(x=10, y=10, width=300, height=190)
+            #self.addcatw.place(x=10, y=10, width=300, height=190)
             
             self.addcatw.mainloop()
             self.task_filter()
@@ -806,19 +825,29 @@ class MainWindow(tk.Frame):
         val1 = self.cat.get()
         if val1 == "":
             messagebox.showerror("Kļūda!", "Kategorijai jāpiešķir nosaukums!")
-        
         val2 = self.description.get()
         self.description.delete(0, tk.END)
         self.cat.delete(0, tk.END)
         self.catlist.delete(0, tk.END)
         conn = sqlite3.connect('todolist.db')
         c = conn.cursor()
-        c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
+        try:
+            c.execute("INSERT INTO CATEGORY ( CATEGORY_NAME, CATEGORY_DESC) VALUES ( ?, ?)", ( val1, val2))
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Kļūda!", "Kategorijai jāpiešķir unikāls vārds!")
+            c.execute(''' SELECT * FROM CATEGORY ''')
+            for row in c.fetchall():
+                self.catlist.insert(tk.END, row[1])
+            conn.close()
+            return
+        
         c.execute(''' SELECT * FROM CATEGORY ''')
         for row in c.fetchall():
             self.catlist.insert(tk.END, row[1])
         conn.commit()
         conn.close()
+            
+        
         self.addcatw.destroy()
         self.task_filter()
     
@@ -828,11 +857,11 @@ class MainWindow(tk.Frame):
                 messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
                 return
             try:
-                selected_index = self.todolist.curselection()
+                selected_index = self.catlist.curselection()
                 if selected_index:
                     index = selected_index[0]
-                    fulltext = self.todolist.get(index)
-                print(fulltext)
+                    fulltext = self.catlist.get(index)
+                
             except UnboundLocalError:
                 messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
                 return
@@ -859,7 +888,7 @@ class MainWindow(tk.Frame):
 
             donebtn = tk.Button(self.cateditorw, text= "Izveidot", font=("Trebuchet",10),width=5, command= self.editcat)
             donebtn.place(x= 190, y=150)
-            self.cateditorw.place(x=10, y=10, width=300, height=190)
+            #self.cateditorw.place(x=10, y=10, width=300, height=190)
             
             self.cateditorw.mainloop()
             self.task_filter()
@@ -870,11 +899,11 @@ class MainWindow(tk.Frame):
             messagebox.showerror("Kļūda!","Nav izveidotu kategoriju!")
             return
         try:
-                selected_index = self.todolist.curselection()
+                selected_index = self.catlist.curselection()
                 if selected_index:
                     index = selected_index[0]
-                    fulltext = self.todolist.get(index)
-                print(fulltext)
+                    fulltext = self.catlist.get(index)
+                
         except UnboundLocalError:
             messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
             return
@@ -901,7 +930,7 @@ class MainWindow(tk.Frame):
                 if selected_index:
                     index = selected_index[0]
                     fulltext = self.todolist.get(index)
-                print(fulltext)
+                
         except UnboundLocalError:
             messagebox.showerror("Kļūda!", "Nav izvēlēta kategorija!")
             return
@@ -939,29 +968,39 @@ class MainWindow(tk.Frame):
         val1 = self.cat.get()
         if val1 == "":
             messagebox.showerror("Kļūda!", "Kategorijai jābūt nosaukums!")
-            val2 = self.description.get()
-            self.cat.delete(0, tk.END)
-            self.description.delete(0, tk.END)
-            selected_index = self.catlist.curselection()
-            if selected_index:
-                index = selected_index[0]
-                self.catname = self.catlist.get(index)
-                conn = sqlite3.connect('todolist.db')
-                c = conn.cursor()
-                c.execute("""
-                    UPDATE CATEGORY 
-                    SET CATEGORY_NAME = ?,
-                    CATEGORY_DESC = ?
-                    WHERE CATEGORY_NAME = ?
-                """, (val1, val2, self.catname))
-                self.catlist.delete(0, tk.END)
-                c.execute(''' SELECT * FROM CATEGORY''')
-                for row in c.fetchall():
-                    self.catlist.insert(tk.END, row[1])
-                conn.commit()
-                conn.close()
-                self.cateditorw.destroy()
-                self.task_filter()
+        val2 = self.description.get()
+        self.cat.delete(0, tk.END)
+        self.description.delete(0, tk.END)
+        selected_index = self.catlist.curselection()
+        if selected_index:
+            index = selected_index[0]
+            self.catname = self.catlist.get(index) 
+        conn = sqlite3.connect('todolist.db')
+        c = conn.cursor()
+        try:
+            c.execute("""
+                UPDATE CATEGORY 
+                SET CATEGORY_NAME = ?,
+                CATEGORY_DESC = ?
+                WHERE CATEGORY_NAME = ?
+            """, (val1, val2, self.catname))
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Kļūda!", "Kategorijai jāpiešķir unikāls vārds!")
+            c.execute(''' SELECT * FROM CATEGORY''')
+            self.catlist.delete(0, tk.END)
+            for row in c.fetchall():
+                self.catlist.insert(tk.END, row[1])
+            conn.close()
+            return
+                
+        self.catlist.delete(0, tk.END)
+        c.execute(''' SELECT * FROM CATEGORY''')
+        for row in c.fetchall():
+            self.catlist.insert(tk.END, row[1])
+        conn.commit()
+        conn.close()
+        self.cateditorw.destroy()
+        self.task_filter()
 
         
 
