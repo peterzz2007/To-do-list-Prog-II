@@ -45,9 +45,9 @@ class login(tk.Frame):
         self.list.place(x=10, y=10)
         self.list.bind("<<ListboxSelect>>", self.on_select)
         self.weathertext = tk.Label(self, font= ("Trebuchet", 10 ,"bold"))
-        self.weathertext.place(x=260 ,y= 200)
+        self.weathertext.place(x=260 ,y= 275)
         self.weatherinfo = tk.Label(self, font= ("Trebuchet", 10 ,"bold"))
-        self.weatherinfo.place(x=260 ,y= 220)
+        self.weatherinfo.place(x=260 ,y= 295)
         self.place(x=0, y=0, width=500, height=350)
 
         conn = sqlite3.connect('todolist.db')
@@ -145,11 +145,11 @@ class login(tk.Frame):
                     
                 else:
                     self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
-                    self.passwordtext.place( x=260 ,y= 145)
+                    self.passwordtext.place( x=260 ,y= 185)
                     self.password = tk.Entry(self, width= 25, font= "Trebuchet", show="*")
-                    self.password.place(x= 260, y = 170)
+                    self.password.place(x= 260, y = 210)
                     self.loginbtn = tk.Button(self, text="Ielogoties", font= "Trebuchet", width= 8, command= self.passwordsys)
-                    self.loginbtn.place(x= 405, y = 195)
+                    self.loginbtn.place(x= 405, y = 235)
                     
             except AttributeError:
                 messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
@@ -1103,12 +1103,6 @@ class register(tk.Frame):
     
 
 
-
-
-
-root = tk.Tk()
-login(root)
-root.mainloop()
 
 
 
