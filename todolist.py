@@ -6,13 +6,15 @@ from datetime import datetime
 import hashlib
 import requests
 
+API_KEY = '89defaeb83bef87641e3a553bd00cb9b'
+
 def window(width, height):
     x = (root.winfo_screenwidth() // 2) - (width // 2)
     y = (root.winfo_screenheight() // 2) - (height // 2)
     root.geometry(f'{width}x{height}+{x}+{y}')
 
 loginindex = 0
-
+wthrtxt = ""
 class login(tk.Frame):
     def __init__(self, master):
         super().__init__()
@@ -36,9 +38,16 @@ class login(tk.Frame):
         deleteuser = tk.Button(self, text="Dzēst profilu", font= "Trebuchet", width= 25, command= self.deleteuserc)
         deleteuser.place(x=260 ,y= 110)
 
+        weather = tk.Button(self, text="Laikapstākļi", font= "Trebuchet", width= 25, command= self.weatherstat)
+        weather.place(x=260 ,y= 145)
+
         self.list = tk.Listbox(self, width = 27, height= 17, font= "Trebuchet")
         self.list.place(x=10, y=10)
         self.list.bind("<<ListboxSelect>>", self.on_select)
+        self.weathertext = tk.Label(self, font= ("Trebuchet", 10 ,"bold"))
+        self.weathertext.place(x=260 ,y= 200)
+        self.weatherinfo = tk.Label(self, font= ("Trebuchet", 10 ,"bold"))
+        self.weatherinfo.place(x=260 ,y= 220)
         self.place(x=0, y=0, width=500, height=350)
 
         conn = sqlite3.connect('todolist.db')
@@ -196,7 +205,9 @@ class login(tk.Frame):
                     
             except AttributeError:
                 messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
-        
+    
+
+
     def deletesys(self):
         self.entered_pass = self.password.get()
         ent_password = self.entered_pass
@@ -227,6 +238,30 @@ class login(tk.Frame):
             widget.destroy()
         self.destroy()
         register(self.master)
+
+    def weatherstat(self):
+        global wthrtxt
+        url = f"http://api.openweathermap.org/data/2.5/forecast?q=Kuldiga,LV&appid={API_KEY}&units=metric"
+        try:
+            data = requests.get(url).json()
+            shown = set()
+            for item in data["list"]:
+                date = item["dt_txt"].split()[0]
+                if date not in shown: 
+                    temp = item["main"]["temp"]
+                    weather = item["weather"][0]["main"]
+                    status = "Sauļains" if weather == "Clear" else "Mākoņains" if weather == "Clouds" else "Lietains"
+
+                    wthrtxt = f"{temp}°C ({status})"
+                    shown.add(date)
+
+                    if len(shown) >= 1:
+                        break
+            self.weathertext.config(text="Šī brīža laikapstākļi: ")
+            self.weatherinfo.config(text=wthrtxt)
+        except:
+            messagebox.showerror("Kļūda!", "Kļūda ar datubāzi!")
+            return
         
 class MainWindow(tk.Frame):
 
@@ -961,8 +996,6 @@ class MainWindow(tk.Frame):
         taskdesctext.place(x=10, y=40)
         taskdesc = tk.Label(self.newtaskWindow, text=f"{self.task_desc}", font= ("Trebuchet", 12))
         taskdesc.place(x=10, y=60)
-        self.task.place(x=0, y=0 ,width= 300, height= 100)
-
 
     def editcat(self):
         val1 = self.cat.get()
@@ -1070,6 +1103,12 @@ class register(tk.Frame):
     
 
 
+
+
+
+root = tk.Tk()
+login(root)
+root.mainloop()
 
 
 
