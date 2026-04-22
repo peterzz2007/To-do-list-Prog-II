@@ -197,11 +197,11 @@ class login(tk.Frame):
                     
                 else:
                     self.passwordtext = tk.Label(self, text="Ievadiet paroli", font= "Trebuchet")
-                    self.passwordtext.place( x=260 ,y= 145)
+                    self.passwordtext.place( x=260 ,y= 185)
                     self.password = tk.Entry(self, width= 25, font= "Trebuchet", show="*")
-                    self.password.place(x= 260, y = 170)
-                    self.loginbtn = tk.Button(self, text="Dzēst", font= "Trebuchet", width= 8, command= self.deletesys)
-                    self.loginbtn.place(x= 405, y = 195)
+                    self.password.place(x= 260, y = 210)
+                    self.loginbtn = tk.Button(self, text="Dzēst", font= "Trebuchet", width= 8, command= self.passwordsys)
+                    self.loginbtn.place(x= 405, y = 235)
                     
             except AttributeError:
                 messagebox.showerror("Kļūda!", "Izvēlieties profilu!")
